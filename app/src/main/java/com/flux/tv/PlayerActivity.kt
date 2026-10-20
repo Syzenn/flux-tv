@@ -31,7 +31,7 @@ import coil.load
 import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
-class PlayerActivity : AppCompatActivity() {
+class PlayerActivity : FluxActivity() {
 
     companion object {
         const val EXTRA_INDEX = "index"

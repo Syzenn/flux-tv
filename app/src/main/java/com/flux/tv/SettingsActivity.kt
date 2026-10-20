@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Réglages, façon Apple TV : grande icône à gauche, liste à droite. */
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : FluxActivity() {
 
     private lateinit var prefs: Prefs
     private lateinit var list: LinearLayout

@@ -29,7 +29,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-class MainActivity : AppCompatActivity(), TileAdapter.Listener {
+class MainActivity : FluxActivity(), TileAdapter.Listener {
 
     private lateinit var prefs: Prefs
     private lateinit var api: XtreamApi
