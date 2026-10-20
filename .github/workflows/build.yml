@@ -24,7 +24,14 @@ jobs:
           gradle-version: '8.9'
 
       - name: Tester
-        run: gradle testReleaseUnitTest --no-daemon
+        run: |
+          set -o pipefail
+          gradle testReleaseUnitTest --no-daemon --rerun-tasks | tee test-output.txt
+          # Résumé de la liste gratuite, visible dans les annotations du build
+          grep -o "FREE_FR chaines=.*" test-output.txt | head -1 | sed 's/^/::notice title=Liste gratuite::/' || true
+          grep -o "FREE_FR categories:.*" test-output.txt | head -1 | cut -c1-900 | sed 's/^/::notice title=Categories::/' || true
+          grep -o "FREE_FR [^|]* |.*" test-output.txt | grep -v "chaines=\|categories:" | head -25 | tr '\n' ';' | cut -c1-1500 | sed 's/^/::notice title=Exemples::/' || true
+          grep -o "FREE_FR ignoré.*" test-output.txt | head -1 | sed 's/^/::warning title=Liste gratuite::/' || true
 
       - name: Compiler
         run: gradle assembleRelease --no-daemon --stacktrace
