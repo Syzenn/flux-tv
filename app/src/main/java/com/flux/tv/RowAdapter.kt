@@ -3,6 +3,7 @@ package com.flux.tv
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -59,11 +60,15 @@ class RowAdapter(private val cb: TileAdapter.Listener) : RecyclerView.Adapter<Ro
     override fun onBindViewHolder(h: VH, position: Int) {
         val row = rows[position]
         h.title.text = row.title
-        h.shelf.background = if (row.isFavorites) {
-            ContextCompat.getDrawable(h.itemView.context, R.drawable.shelf_bg)
+        // Les tuiles qui défilent sont coupées proprement sur les bords arrondis de la rangée.
+        if (row.isFavorites) {
+            h.shelf.background = ContextCompat.getDrawable(h.itemView.context, R.drawable.shelf_bg)
+            h.shelf.outlineProvider = ViewOutlineProvider.BACKGROUND
         } else {
-            null
+            h.shelf.background = null
+            h.shelf.outlineProvider = ViewOutlineProvider.BOUNDS
         }
+        h.shelf.clipToOutline = true
         h.tiles.submit(row.channels, favorites)
     }
 }
