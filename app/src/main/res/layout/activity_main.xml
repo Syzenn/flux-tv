@@ -1,96 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
-    android:clipChildren="false"
-    android:orientation="horizontal">
+    android:clipChildren="false">
+
+    <View
+        android:id="@+id/bgBase"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <View
+        android:id="@+id/glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <LinearLayout
-        android:layout_width="260dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/surface"
-        android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="32dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="12dp"
-            android:text="Flux"
-            android:textColor="@color/text"
-            android:textSize="30sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="12dp"
-            android:text="Ta TV, en plus rapide"
-            android:textColor="@color/muted"
-            android:textSize="13sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/categories"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="24dp"
-            android:layout_weight="1"
-            android:clipToPadding="false" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:orientation="vertical"
-        android:paddingStart="32dp"
-        android:paddingTop="32dp"
-        android:paddingEnd="32dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/sectionTitle"
-            android:layout_width="wrap_content"
+        <!-- En-tête : salutation, heure, date, boutons -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/text"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:gravity="bottom"
+            android:orientation="horizontal"
+            android:paddingStart="56dp"
+            android:paddingTop="30dp"
+            android:paddingEnd="56dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Appui long sur OK (ou touche Menu) : ajouter ou retirer des favoris"
-            android:textColor="@color/muted"
-            android:textSize="13sp" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/greeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.2"
+                    android:textColor="@color/white_80"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/clock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text"
+                        android:textSize="40sp" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="22dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@color/white_40" />
+
+                    <TextView
+                        android:id="@+id/date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.15"
+                        android:textColor="@color/white_80"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/btnRefresh"
+                style="@style/FluxPill"
+                android:layout_marginBottom="8dp"
+                android:text="Actualiser" />
+
+            <TextView
+                android:id="@+id/btnSettings"
+                style="@style/FluxPill"
+                android:layout_marginStart="12dp"
+                android:layout_marginBottom="8dp"
+                android:text="Réglages" />
+        </LinearLayout>
+
+        <!-- Grande zone : chaîne sélectionnée -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="112dp"
+            android:layout_marginTop="22dp"
+            android:orientation="vertical"
+            android:paddingStart="64dp"
+            android:paddingEnd="64dp">
+
+            <TextView
+                android:id="@+id/heroTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:shadowColor="#66000000"
+                android:shadowDy="2"
+                android:shadowRadius="12"
+                android:singleLine="true"
+                android:textColor="@color/text"
+                android:textSize="42sp" />
+
+            <TextView
+                android:id="@+id/heroSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/white_80"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/heroHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:singleLine="true"
+                android:textColor="@color/white_60"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="12dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:clipChildren="false"
             android:clipToPadding="false">
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/grid"
+                android:id="@+id/rows"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:paddingTop="8dp"
-                android:paddingBottom="32dp" />
+                android:paddingBottom="48dp" />
 
             <ProgressBar
                 android:id="@+id/loading"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_gravity="center"
-                android:indeterminateTint="@color/accent"
+                android:indeterminateTint="@color/text"
                 android:visibility="gone" />
 
             <TextView
@@ -101,9 +170,9 @@
                 android:gravity="center"
                 android:lineSpacingExtra="6dp"
                 android:padding="40dp"
-                android:textColor="@color/muted"
+                android:textColor="@color/white_80"
                 android:textSize="17sp"
                 android:visibility="gone" />
         </FrameLayout>
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

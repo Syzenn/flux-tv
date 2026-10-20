@@ -26,6 +26,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_login)
+        Ambience(findViewById(R.id.bgBase), findViewById(R.id.glow))
         val server = findViewById<EditText>(R.id.server)
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)

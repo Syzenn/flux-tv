@@ -1,92 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
-    android:fillViewport="true">
+    android:background="@color/bg">
 
-    <FrameLayout
+    <View
+        android:id="@+id/bgBase"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="24dp">
+        android:layout_height="match_parent" />
 
-        <LinearLayout
-            android:layout_width="520dp"
+    <View
+        android:id="@+id/glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <FrameLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@drawable/card_bg"
-            android:orientation="vertical"
-            android:padding="40dp">
+            android:padding="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="460dp"
                 android:layout_height="wrap_content"
-                android:text="Flux"
-                android:textColor="@color/text"
-                android:textSize="36sp"
-                android:textStyle="bold" />
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Connecte ton abonnement IPTV (Xtream)"
-                android:textColor="@color/muted"
-                android:textSize="15sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Flux"
+                    android:textColor="@color/text"
+                    android:textSize="48sp" />
 
-            <EditText
-                android:id="@+id/server"
-                style="@style/FluxInput"
-                android:layout_marginTop="28dp"
-                android:hint="Adresse du serveur (ex : http://exemple.com:8080)"
-                android:inputType="textUri" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:text="Connecte ton abonnement IPTV (Xtream)"
+                    android:textColor="@color/white_80"
+                    android:textSize="15sp" />
 
-            <EditText
-                android:id="@+id/username"
-                style="@style/FluxInput"
-                android:hint="Identifiant"
-                android:inputType="text" />
+                <EditText
+                    android:id="@+id/server"
+                    style="@style/FluxInput"
+                    android:layout_marginTop="32dp"
+                    android:hint="Adresse du serveur (ex : http://exemple.com:8080)"
+                    android:inputType="textUri" />
 
-            <EditText
-                android:id="@+id/password"
-                style="@style/FluxInput"
-                android:hint="Mot de passe"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword" />
+                <EditText
+                    android:id="@+id/username"
+                    style="@style/FluxInput"
+                    android:hint="Identifiant"
+                    android:inputType="text" />
 
-            <TextView
-                android:id="@+id/error"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textColor="#FF7A7A"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                <EditText
+                    android:id="@+id/password"
+                    style="@style/FluxInput"
+                    android:hint="Mot de passe"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword" />
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp">
-
-                <Button
-                    android:id="@+id/connect"
+                <TextView
+                    android:id="@+id/error"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/button_bg"
-                    android:text="Se connecter"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <ProgressBar
-                    android:id="@+id/progress"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_gravity="center"
-                    android:indeterminateTint="#FFFFFF"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:textColor="#FF8A8A"
+                    android:textSize="14sp"
                     android:visibility="gone" />
-            </FrameLayout>
-        </LinearLayout>
-    </FrameLayout>
-</ScrollView>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp">
+
+                    <Button
+                        android:id="@+id/connect"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:background="@drawable/button_bg"
+                        android:fontFamily="sans-serif-medium"
+                        android:stateListAnimator="@null"
+                        android:text="Se connecter"
+                        android:textAllCaps="false"
+                        android:textColor="@color/pill_text"
+                        android:textSize="17sp" />
+
+                    <ProgressBar
+                        android:id="@+id/progress"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:indeterminateTint="@color/text"
+                        android:visibility="gone" />
+                </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </ScrollView>
+</FrameLayout>

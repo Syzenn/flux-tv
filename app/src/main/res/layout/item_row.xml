@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:paddingTop="8dp">
+
+    <TextView
+        android:id="@+id/rowTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="64dp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.12"
+        android:textAllCaps="true"
+        android:textColor="@color/white_60"
+        android:textSize="13sp" />
+
+    <FrameLayout
+        android:id="@+id/shelf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="40dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rowList"
+            android:layout_width="match_parent"
+            android:layout_height="146dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="14dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="14dp" />
+    </FrameLayout>
+</LinearLayout>

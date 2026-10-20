@@ -8,6 +8,6 @@
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:textColorPrimary">@color/text</item>
-        <item name="android:textColorHint">@color/muted</item>
+        <item name="android:textColorHint">@color/white_60</item>
     </style>
 </resources>

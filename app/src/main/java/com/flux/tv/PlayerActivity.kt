@@ -27,12 +27,7 @@ import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory
 import androidx.media3.ui.PlayerView
 import coil.load
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(UnstableApi::class)
 class PlayerActivity : AppCompatActivity() {
@@ -55,6 +50,10 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var nameView: TextView
     private lateinit var nowView: TextView
     private lateinit var nextView: TextView
+    private lateinit var logoInitials: TextView
+    private lateinit var timeline: View
+    private lateinit var startTimeView: TextView
+    private lateinit var endTimeView: TextView
     private lateinit var progressView: ProgressBar
     private lateinit var loadingView: ProgressBar
     private lateinit var errorView: TextView
@@ -68,12 +67,9 @@ class PlayerActivity : AppCompatActivity() {
     private var stopped = false
 
     private val handler = Handler(Looper.getMainLooper())
-    private val hideOverlay = Runnable { overlay.visibility = View.GONE }
+    private val hideOverlay = Runnable { fadeOutOverlay() }
     private val startPending = Runnable { playCurrent() }
     private val retry = Runnable { startStream(currentId, currentHls) }
-
-    private val epgCache = HashMap<Int, List<EpgEntry>>()
-    private val timeFormat = SimpleDateFormat("HH:mm", Locale.FRANCE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,6 +92,10 @@ class PlayerActivity : AppCompatActivity() {
         nameView = findViewById(R.id.name)
         nowView = findViewById(R.id.now)
         nextView = findViewById(R.id.next)
+        logoInitials = findViewById(R.id.logoInitials)
+        timeline = findViewById(R.id.timeline)
+        startTimeView = findViewById(R.id.startTime)
+        endTimeView = findViewById(R.id.endTime)
         progressView = findViewById(R.id.progress)
         loadingView = findViewById(R.id.loading)
         errorView = findViewById(R.id.error)
@@ -107,7 +107,7 @@ class PlayerActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this) {
             if (overlay.visibility == View.VISIBLE) {
                 handler.removeCallbacks(hideOverlay)
-                overlay.visibility = View.GONE
+                fadeOutOverlay()
             } else {
                 finish()
             }
@@ -226,54 +226,73 @@ class PlayerActivity : AppCompatActivity() {
     private fun showInfo() {
         val id = playlist[index]
         val ch = Repo.byId[id]
-        numView.text = (index + 1).toString()
+        numView.text = "Chaîne ${index + 1} sur ${playlist.size}"
         nameView.text = ch?.displayName ?: "Chaîne $id"
+        logoInitials.text = TileAdapter.initialsOf(ch?.displayName ?: "TV")
         if (ch != null && ch.icon.isNotBlank()) {
-            logoView.load(ch.icon) { crossfade(false) }
+            logoInitials.visibility = View.GONE
+            logoView.load(ch.icon) {
+                crossfade(false)
+                listener(onError = { _, _ -> logoInitials.visibility = View.VISIBLE })
+            }
         } else {
             logoView.setImageDrawable(null)
+            logoInitials.visibility = View.VISIBLE
         }
 
-        val cached = epgCache[id]
+        val cached = Epg.cached(id)
         if (cached != null) {
             renderEpg(cached)
         } else {
             nowView.text = ""
             nextView.text = ""
-            progressView.visibility = View.INVISIBLE
+            timeline.visibility = View.INVISIBLE
             lifecycleScope.launch {
-                val epg = withContext(Dispatchers.IO) {
-                    runCatching { api.shortEpg(id) }.getOrDefault(emptyList())
-                }
-                epgCache[id] = epg
+                val epg = Epg.get(api, id)
                 if (playlist[index] == id) renderEpg(epg)
             }
         }
 
-        overlay.visibility = View.VISIBLE
+        fadeInOverlay()
         handler.removeCallbacks(hideOverlay)
         handler.postDelayed(hideOverlay, OVERLAY_MS)
     }
 
-    private fun renderEpg(epg: List<EpgEntry>) {
-        val now = System.currentTimeMillis() / 1000
-        val currentIndex = epg.indexOfFirst { it.start <= now && it.end > now }
-        val cur = epg.getOrNull(currentIndex)
-        val next = if (currentIndex >= 0) epg.getOrNull(currentIndex + 1) else epg.firstOrNull { it.start > now }
-
-        if (cur != null) {
-            nowView.text = "${hhmm(cur.start)} – ${hhmm(cur.end)}   ${cur.title}"
-            val total = (cur.end - cur.start).coerceAtLeast(1)
-            progressView.progress = (((now - cur.start) * 100) / total).toInt().coerceIn(0, 100)
-            progressView.visibility = View.VISIBLE
-        } else {
-            nowView.text = "Pas de programme disponible"
-            progressView.visibility = View.INVISIBLE
+    private fun fadeInOverlay() {
+        overlay.animate().cancel()
+        if (overlay.visibility != View.VISIBLE) {
+            overlay.alpha = 0f
+            overlay.translationY = 24f
+            overlay.visibility = View.VISIBLE
         }
-        nextView.text = next?.let { "Ensuite ${hhmm(it.start)}   ${it.title}" } ?: ""
+        overlay.animate().alpha(1f).translationY(0f).setDuration(220).start()
     }
 
-    private fun hhmm(seconds: Long): String = timeFormat.format(Date(seconds * 1000))
+    private fun fadeOutOverlay() {
+        overlay.animate().cancel()
+        overlay.animate().alpha(0f).translationY(24f).setDuration(220)
+            .withEndAction { overlay.visibility = View.GONE }
+            .start()
+    }
+
+    private fun renderEpg(epg: List<EpgEntry>) {
+        val (cur, next) = Epg.nowAndNext(epg)
+        val now = System.currentTimeMillis() / 1000
+
+        if (cur != null) {
+            nowView.text = cur.title
+            startTimeView.text = Epg.hhmm(cur.start)
+            endTimeView.text = Epg.hhmm(cur.end)
+            val total = (cur.end - cur.start).coerceAtLeast(1)
+            progressView.progress = (((now - cur.start) * 100) / total).toInt().coerceIn(0, 100)
+            timeline.visibility = View.VISIBLE
+        } else {
+            nowView.text = "Pas de programme disponible"
+            timeline.visibility = View.GONE
+        }
+        nextView.text = next?.let { "Ensuite à ${Epg.hhmm(it.start)}  ·  ${it.title}" } ?: ""
+        nextView.visibility = if (next == null) View.GONE else View.VISIBLE
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         when (keyCode) {
@@ -286,9 +305,9 @@ class PlayerActivity : AppCompatActivity() {
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER,
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_INFO -> {
                 if (event.repeatCount == 0) {
-                    if (overlay.visibility == View.VISIBLE && keyCode != KeyEvent.KEYCODE_INFO) {
+                    if (overlay.visibility == View.VISIBLE && overlay.alpha > 0.5f && keyCode != KeyEvent.KEYCODE_INFO) {
                         handler.removeCallbacks(hideOverlay)
-                        overlay.visibility = View.GONE
+                        fadeOutOverlay()
                     } else {
                         showInfo()
                     }

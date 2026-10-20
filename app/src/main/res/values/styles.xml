@@ -5,11 +5,30 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">12dp</item>
         <item name="android:background">@drawable/input_bg</item>
-        <item name="android:padding">14dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">15dp</item>
+        <item name="android:paddingBottom">15dp</item>
         <item name="android:singleLine">true</item>
         <item name="android:imeOptions">actionNext</item>
         <item name="android:textColor">@color/text</item>
-        <item name="android:textColorHint">@color/muted</item>
+        <item name="android:textColorHint">@color/white_60</item>
         <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="FluxPill">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/pill_bg</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:textColor">@color/pill_text</item>
+        <item name="android:textSize">14sp</item>
     </style>
 </resources>

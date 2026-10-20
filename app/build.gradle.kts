@@ -57,6 +57,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.activity:activity-ktx:1.9.1")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.palette:palette:1.0.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.media3:media3-exoplayer:$media3")
