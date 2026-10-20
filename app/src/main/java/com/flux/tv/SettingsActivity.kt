@@ -62,27 +62,42 @@ class SettingsActivity : FluxActivity() {
             focusRowTitled("Mémoire tampon")
         }
 
-        section("Chaînes")
-        row(
-            R.drawable.ic_refresh,
-            "Actualiser la liste",
-            "${Repo.channels.size} chaînes, ${Repo.categories.size} catégories",
-            null,
-        ) { refreshChannels() }
-        row(
-            R.drawable.ic_star,
-            "Vider les favoris",
-            "${prefs.favorites.size} chaîne(s) en favori",
-            null,
-        ) { confirmClearFavorites() }
+        if (prefs.isLoggedIn) {
+            section("Chaînes")
+            row(
+                R.drawable.ic_refresh,
+                "Actualiser la liste",
+                "${Repo.channels.size} chaînes, ${Repo.categories.size} catégories",
+                null,
+            ) { refreshChannels() }
+            row(
+                R.drawable.ic_star,
+                "Vider les favoris",
+                "${prefs.favorites.size} chaîne(s) en favori",
+                null,
+            ) { confirmClearFavorites() }
+        }
 
-        section("Compte")
-        row(
-            R.drawable.ic_power,
-            "Se déconnecter",
-            prefs.server.removePrefix("http://").removePrefix("https://"),
-            null,
-        ) { confirmLogout() }
+        section("Abonnement IPTV")
+        if (prefs.isLoggedIn) {
+            row(
+                R.drawable.ic_power,
+                "Se déconnecter",
+                prefs.server.removePrefix("http://").removePrefix("https://"),
+                null,
+            ) { confirmLogout() }
+        } else {
+            row(
+                R.drawable.ic_login,
+                "Connecter un abonnement",
+                "Avec tes codes Xtream (serveur, identifiant, mot de passe), tes chaînes et favoris s'affichent sur l'accueil.",
+                "Aucun",
+            ) {
+                startActivity(
+                    Intent(this, LoginActivity::class.java).putExtra(LoginActivity.EXTRA_FROM_SETTINGS, true)
+                )
+            }
+        }
     }
 
     private fun onOff(b: Boolean) = if (b) "Activée" else "Désactivée"
@@ -164,12 +179,13 @@ class SettingsActivity : FluxActivity() {
     private fun confirmLogout() {
         AlertDialog.Builder(this)
             .setTitle("Se déconnecter ?")
-            .setMessage("Tes favoris sont conservés.")
+            .setMessage("Tes favoris sont conservés. L'accueil gardera tes applis.")
             .setPositiveButton("Se déconnecter") { _, _ ->
                 prefs.logout()
+                prefs.skipLogin = true
                 Repo.clear(this)
                 startActivity(
-                    Intent(this, LoginActivity::class.java)
+                    Intent(this, MainActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 )
                 finish()

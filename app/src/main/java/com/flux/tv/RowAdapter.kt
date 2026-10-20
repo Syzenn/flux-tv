@@ -10,26 +10,45 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class Row(val key: String, val title: String, val channels: List<Channel>, val isFavorites: Boolean)
+/** Une rangée de l'accueil : soit des chaînes, soit des applis. */
+class Row(
+    val key: String,
+    val title: String,
+    val channels: List<Channel> = emptyList(),
+    val apps: List<AppEntry> = emptyList(),
+    /** Rangée posée sur une étagère en verre dépoli (Applis, Favoris). */
+    val onShelf: Boolean = false,
+) {
+    val isApps get() = apps.isNotEmpty()
+    val isFavorites get() = key == "fav"
+    val size get() = if (isApps) apps.size else channels.size
+}
 
-/** Liste verticale de rangées : Favoris en premier, puis une rangée par catégorie. */
-class RowAdapter(private val cb: TileAdapter.Listener) : RecyclerView.Adapter<RowAdapter.VH>() {
+/** Liste verticale de rangées. */
+class RowAdapter(
+    private val tileCb: TileAdapter.Listener,
+    private val appCb: AppAdapter.Listener,
+) : RecyclerView.Adapter<RowAdapter.VH>() {
 
     var rows: List<Row> = emptyList()
         private set
     private var favorites: Set<Int> = emptySet()
 
-    private val pool = RecyclerView.RecycledViewPool().apply { setMaxRecycledViews(0, 48) }
+    private val pool = RecyclerView.RecycledViewPool().apply {
+        setMaxRecycledViews(0, 48)
+        setMaxRecycledViews(AppAdapter.VIEW_TYPE, 24)
+    }
 
     init {
         setHasStableIds(true)
     }
 
-    class VH(v: View, cb: TileAdapter.Listener) : RecyclerView.ViewHolder(v) {
+    class VH(v: View, tileCb: TileAdapter.Listener, appCb: AppAdapter.Listener) : RecyclerView.ViewHolder(v) {
         val title: TextView = v.findViewById(R.id.rowTitle)
         val shelf: FrameLayout = v.findViewById(R.id.shelf)
         val list: RecyclerView = v.findViewById(R.id.rowList)
-        val tiles = TileAdapter(cb)
+        val tiles = TileAdapter(tileCb)
+        val apps = AppAdapter(appCb)
     }
 
     fun submit(list: List<Row>, favs: Set<Int>) {
@@ -46,22 +65,22 @@ class RowAdapter(private val cb: TileAdapter.Listener) : RecyclerView.Adapter<Ro
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_row, parent, false)
-        val h = VH(v, cb)
+        val h = VH(v, tileCb, appCb)
         h.list.layoutManager = LinearLayoutManager(parent.context, LinearLayoutManager.HORIZONTAL, false).apply {
             initialPrefetchItemCount = 6
         }
         h.list.setRecycledViewPool(pool)
         h.list.itemAnimator = null
         h.list.setHasFixedSize(true)
-        h.list.adapter = h.tiles
         return h
     }
 
     override fun onBindViewHolder(h: VH, position: Int) {
         val row = rows[position]
         h.title.text = row.title
+
         // Les tuiles qui défilent sont coupées proprement sur les bords arrondis de la rangée.
-        if (row.isFavorites) {
+        if (row.onShelf) {
             h.shelf.background = ContextCompat.getDrawable(h.itemView.context, R.drawable.shelf_bg)
             h.shelf.outlineProvider = ViewOutlineProvider.BACKGROUND
         } else {
@@ -69,6 +88,13 @@ class RowAdapter(private val cb: TileAdapter.Listener) : RecyclerView.Adapter<Ro
             h.shelf.outlineProvider = ViewOutlineProvider.BOUNDS
         }
         h.shelf.clipToOutline = true
-        h.tiles.submit(row.channels, favorites)
+
+        if (row.isApps) {
+            if (h.list.adapter !== h.apps) h.list.adapter = h.apps
+            h.apps.submit(row.apps)
+        } else {
+            if (h.list.adapter !== h.tiles) h.list.adapter = h.tiles
+            h.tiles.submit(row.channels, favorites)
+        }
     }
 }

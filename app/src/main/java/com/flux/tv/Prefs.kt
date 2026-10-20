@@ -20,6 +20,11 @@ class Prefs(context: Context) {
     val isLoggedIn: Boolean
         get() = server.isNotBlank() && username.isNotBlank()
 
+    /** L'utilisateur a choisi « Plus tard » : Flux s'ouvre sur ses applis, sans abonnement. */
+    var skipLogin: Boolean
+        get() = sp.getBoolean("skip_login", false)
+        set(v) = sp.edit().putBoolean("skip_login", v).apply()
+
     /** Favoris, dans l'ordre où ils ont été ajoutés. */
     var favorites: List<Int>
         get() = (sp.getString("favs", "") ?: "")

@@ -8,7 +8,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,7 +19,9 @@ class LoginActivity : FluxActivity() {
         super.onCreate(savedInstanceState)
         val prefs = Prefs(this)
 
-        if (prefs.isLoggedIn) {
+        // Ouvert depuis les Réglages : on affiche toujours le formulaire.
+        val fromSettings = intent.getBooleanExtra(EXTRA_FROM_SETTINGS, false)
+        if (prefs.isLoggedIn || (prefs.skipLogin && !fromSettings)) {
             openHome()
             return
         }
@@ -33,6 +34,16 @@ class LoginActivity : FluxActivity() {
         val button = findViewById<Button>(R.id.connect)
         val progress = findViewById<ProgressBar>(R.id.progress)
         val error = findViewById<TextView>(R.id.error)
+        val later = findViewById<Button>(R.id.later)
+        later.text = if (fromSettings) "Annuler" else "Plus tard, ouvrir mes applis"
+        later.setOnClickListener {
+            if (fromSettings) {
+                finish()
+            } else {
+                prefs.skipLogin = true
+                openHome()
+            }
+        }
 
         fun showError(msg: String) {
             error.text = msg
@@ -92,7 +103,14 @@ class LoginActivity : FluxActivity() {
     }
 
     private fun openHome() {
-        startActivity(Intent(this, MainActivity::class.java))
+        startActivity(
+            Intent(this, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        )
         finish()
+    }
+
+    companion object {
+        const val EXTRA_FROM_SETTINGS = "from_settings"
     }
 }
