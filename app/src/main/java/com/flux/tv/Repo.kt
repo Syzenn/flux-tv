@@ -49,8 +49,13 @@ object Repo {
         return data
     }
 
+    /** Augmente à chaque mise à jour de la liste, pour que l'accueil sache qu'il doit se redessiner. */
+    var version = 0
+        private set
+
     /** À appeler sur le thread principal. */
     fun set(data: Data) {
+        version++
         channels = data.channels
         byId = data.channels.associateBy { it.id }
         byCategory = data.channels.groupBy { it.categoryId }

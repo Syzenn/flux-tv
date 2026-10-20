@@ -32,7 +32,7 @@ class Ambience(base: View, private val glow: View, initial: Int = DEFAULT) {
         glow.background = glowDrawable
         base.background = baseDrawable
         glow.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
-            glowDrawable.gradientRadius = max(v.width, v.height) * 0.62f
+            glowDrawable.gradientRadius = max(v.width, v.height) * 0.70f
         }
         paint(initial)
     }
@@ -55,12 +55,12 @@ class Ambience(base: View, private val glow: View, initial: Int = DEFAULT) {
     private fun paint(c: Int) {
         shown = c
         glowDrawable.colors = intArrayOf(
-            ColorUtils.setAlphaComponent(c, 210),
-            ColorUtils.setAlphaComponent(c, 70),
+            ColorUtils.setAlphaComponent(c, 225),
+            ColorUtils.setAlphaComponent(c, 85),
             Color.TRANSPARENT,
         )
         baseDrawable.colors = intArrayOf(
-            ColorUtils.blendARGB(c, Color.BLACK, 0.70f),
+            ColorUtils.blendARGB(c, Color.BLACK, 0.62f),
             ColorUtils.blendARGB(c, Color.BLACK, 0.90f),
             Color.parseColor("#050608"),
         )

@@ -31,7 +31,7 @@ class TileAdapter(private val cb: Listener) : RecyclerView.Adapter<TileAdapter.V
         val card: View = v.findViewById(R.id.card)
         val logo: ImageView = v.findViewById(R.id.logo)
         val initials: TextView = v.findViewById(R.id.initials)
-        val star: TextView = v.findViewById(R.id.star)
+        val star: View = v.findViewById(R.id.star)
         val name: TextView = v.findViewById(R.id.name)
     }
 

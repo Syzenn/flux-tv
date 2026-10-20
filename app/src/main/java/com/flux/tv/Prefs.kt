@@ -43,6 +43,18 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("hls", false)
         set(v) = sp.edit().putBoolean("hls", v).apply()
 
+    // ---------- Lecture ----------
+
+    /** Décodage vidéo tunnelisé (lecture matérielle). */
+    var tunneling: Boolean
+        get() = sp.getBoolean("tunneling", false)
+        set(v) = sp.edit().putBoolean("tunneling", v).apply()
+
+    /** Mémoire tampon plus grande : démarrage un peu plus lent mais moins de coupures. */
+    var stableBuffer: Boolean
+        get() = sp.getBoolean("stable_buffer", false)
+        set(v) = sp.edit().putBoolean("stable_buffer", v).apply()
+
     fun api(): XtreamApi = XtreamApi(server, username, password)
 
     fun logout() {

@@ -36,16 +36,16 @@
             android:textSize="26sp"
             android:visibility="gone" />
 
-        <TextView
+        <ImageView
             android:id="@+id/star"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
             android:layout_gravity="top|end"
-            android:layout_marginTop="-8dp"
-            android:layout_marginEnd="-8dp"
-            android:text="★"
-            android:textColor="@color/gold"
-            android:textSize="12sp"
+            android:layout_marginTop="-7dp"
+            android:layout_marginEnd="-7dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_star"
+            android:tint="@color/gold"
             android:visibility="gone" />
     </FrameLayout>
 

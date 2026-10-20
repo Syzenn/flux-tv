@@ -23,6 +23,7 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory
 import androidx.media3.ui.PlayerView
@@ -128,12 +129,13 @@ class PlayerActivity : AppCompatActivity() {
         val extractors = DefaultExtractorsFactory()
             .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES)
 
+        val stable = prefs.stableBuffer
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                /* minBufferMs = */ 15_000,
-                /* maxBufferMs = */ 50_000,
-                /* bufferForPlaybackMs = */ 1_000,
-                /* bufferForPlaybackAfterRebufferMs = */ 2_500,
+                /* minBufferMs = */ if (stable) 30_000 else 15_000,
+                /* maxBufferMs = */ if (stable) 60_000 else 50_000,
+                /* bufferForPlaybackMs = */ if (stable) 2_500 else 1_000,
+                /* bufferForPlaybackAfterRebufferMs = */ if (stable) 5_000 else 2_500,
             )
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
@@ -142,7 +144,13 @@ class PlayerActivity : AppCompatActivity() {
             .setEnableDecoderFallback(true)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
 
+        // Lecture matérielle : la vidéo va directement du décodeur à l'écran.
+        val trackSelector = DefaultTrackSelector(this).apply {
+            setParameters(buildUponParameters().setTunnelingEnabled(prefs.tunneling))
+        }
+
         return ExoPlayer.Builder(this, renderers)
+            .setTrackSelector(trackSelector)
             .setMediaSourceFactory(DefaultMediaSourceFactory(http, extractors))
             .setLoadControl(loadControl)
             .build()

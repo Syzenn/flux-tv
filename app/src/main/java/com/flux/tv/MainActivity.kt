@@ -13,7 +13,6 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.palette.graphics.Palette
@@ -47,6 +46,8 @@ class MainActivity : AppCompatActivity(), TileAdapter.Listener {
     private lateinit var empty: TextView
 
     private var refreshing = false
+    private var shownVersion = -1
+    private var shownFavorites: List<Int> = emptyList()
     private var focusedId = -1
     private var focusedRow = -1
     private var epgJob: Job? = null
@@ -91,7 +92,9 @@ class MainActivity : AppCompatActivity(), TileAdapter.Listener {
         rowsView.adapter = rowAdapter
 
         findViewById<View>(R.id.btnRefresh).setOnClickListener { refresh(userAsked = true) }
-        findViewById<View>(R.id.btnSettings).setOnClickListener { openSettings() }
+        findViewById<View>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
 
         heroTitle.text = "Bienvenue"
         updateClock()
@@ -103,6 +106,10 @@ class MainActivity : AppCompatActivity(), TileAdapter.Listener {
         if (::clock.isInitialized) {
             handler.removeCallbacks(clockTick)
             handler.post(clockTick)
+            // Les réglages ont pu changer la liste ou les favoris.
+            if (shownVersion >= 0 && (Repo.version != shownVersion || prefs.favorites != shownFavorites)) {
+                if (Repo.hasData) rebuildKeepingFocus()
+            }
         }
     }
 
@@ -183,7 +190,9 @@ class MainActivity : AppCompatActivity(), TileAdapter.Listener {
 
     private fun showRows(firstLoad: Boolean) {
         val rows = buildRows()
-        rowAdapter.submit(rows, prefs.favorites.toSet())
+        shownVersion = Repo.version
+        shownFavorites = prefs.favorites
+        rowAdapter.submit(rows, shownFavorites.toSet())
         if (rows.isEmpty()) {
             showEmpty("Aucune chaîne pour l'instant.")
             return
@@ -200,7 +209,9 @@ class MainActivity : AppCompatActivity(), TileAdapter.Listener {
         val tilePos = currentTilePos()
 
         val rows = buildRows()
-        rowAdapter.submit(rows, prefs.favorites.toSet())
+        shownVersion = Repo.version
+        shownFavorites = prefs.favorites
+        rowAdapter.submit(rows, shownFavorites.toSet())
         if (rows.isEmpty()) {
             showEmpty("Aucune chaîne pour l'instant.")
             return
@@ -340,32 +351,6 @@ class MainActivity : AppCompatActivity(), TileAdapter.Listener {
         }
         clock.text = clockFormat.format(now)
         date.text = dateFormat.format(now).uppercase(Locale.FRANCE)
-    }
-
-    private fun openSettings() {
-        AlertDialog.Builder(this)
-            .setTitle("Réglages")
-            .setItems(arrayOf("Actualiser la liste des chaînes", "Se déconnecter")) { _, which ->
-                when (which) {
-                    0 -> refresh(userAsked = true)
-                    1 -> confirmLogout()
-                }
-            }
-            .show()
-    }
-
-    private fun confirmLogout() {
-        AlertDialog.Builder(this)
-            .setTitle("Se déconnecter ?")
-            .setMessage("Tes favoris sont conservés.")
-            .setPositiveButton("Se déconnecter") { _, _ ->
-                prefs.logout()
-                Repo.clear(this)
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
-            }
-            .setNegativeButton("Annuler", null)
-            .show()
     }
 
     private fun toast(msg: String) {
