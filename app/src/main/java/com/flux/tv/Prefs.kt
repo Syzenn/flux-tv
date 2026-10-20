@@ -17,8 +17,29 @@ class Prefs(context: Context) {
         get() = sp.getString("password", "") ?: ""
         set(v) = sp.edit().putString("password", v).apply()
 
-    val isLoggedIn: Boolean
+    /** Playlist M3U (chaînes gratuites ou lien perso), à la place des codes Xtream. */
+    var m3uUrl: String
+        get() = sp.getString("m3u", "") ?: ""
+        set(v) = sp.edit().putString("m3u", v).apply()
+
+    val isXtream: Boolean
         get() = server.isNotBlank() && username.isNotBlank()
+
+    val isM3u: Boolean
+        get() = !isXtream && m3uUrl.isNotBlank()
+
+    /** Une source de chaînes est configurée (Xtream ou M3U). */
+    val isLoggedIn: Boolean
+        get() = isXtream || isM3u
+
+    /** Nom de la source, pour les Réglages. */
+    val sourceLabel: String
+        get() = when {
+            isXtream -> server.removePrefix("http://").removePrefix("https://")
+            M3u.isFreeFrance(m3uUrl) -> "Chaînes gratuites (France)"
+            isM3u -> runCatching { java.net.URL(m3uUrl).host }.getOrDefault("Playlist M3U")
+            else -> "Aucune"
+        }
 
     /** L'utilisateur a choisi « Plus tard » : Flux s'ouvre sur ses applis, sans abonnement. */
     var skipLogin: Boolean
@@ -68,6 +89,7 @@ class Prefs(context: Context) {
             .remove("username")
             .remove("password")
             .remove("hls")
+            .remove("m3u")
             .apply()
     }
 }

@@ -137,7 +137,7 @@ class MainActivity : FluxActivity(), TileAdapter.Listener, AppAdapter.Listener {
                 return@launch
             }
             if (!Repo.hasData) {
-                val cached = withContext(Dispatchers.IO) { Repo.readCache(this@MainActivity) }
+                val cached = withContext(Dispatchers.IO) { Repo.readCache(this@MainActivity, prefs) }
                 if (cached != null) Repo.set(cached)
             }
             if (Repo.hasData) {
@@ -176,9 +176,8 @@ class MainActivity : FluxActivity(), TileAdapter.Listener, AppAdapter.Listener {
         if (userAsked) toast("Mise à jour de la liste…")
 
         lifecycleScope.launch {
-            val api = prefs.api()
             val result = withContext(Dispatchers.IO) {
-                runCatching { Repo.download(this@MainActivity, api) }
+                runCatching { Repo.download(this@MainActivity, prefs) }
             }
             refreshing = false
             loading.visibility = View.GONE
@@ -315,7 +314,11 @@ class MainActivity : FluxActivity(), TileAdapter.Listener, AppAdapter.Listener {
         val key = "c:${channel.id}"
         focusedKey = key
         heroTitle.text = channel.displayName
-        heroSub.text = Epg.cached(channel.id)?.let { Epg.headline(it) } ?: ""
+        heroSub.text = if (prefs.isXtream) {
+            Epg.cached(channel.id)?.let { Epg.headline(it) } ?: ""
+        } else {
+            "En direct  ·  ${channel.categoryId}"
+        }
         heroHint.text = if (channel.id in prefs.favorites) {
             "Appui long sur OK pour retirer des favoris"
         } else {
@@ -325,7 +328,7 @@ class MainActivity : FluxActivity(), TileAdapter.Listener, AppAdapter.Listener {
         liftRowOf(tile)
 
         epgJob?.cancel()
-        if (Epg.cached(channel.id) == null && prefs.isLoggedIn) {
+        if (Epg.cached(channel.id) == null && prefs.isXtream) {
             val api = prefs.api()
             epgJob = lifecycleScope.launch {
                 delay(350) // on attend que la sélection se pose avant d'interroger le serveur
@@ -358,7 +361,7 @@ class MainActivity : FluxActivity(), TileAdapter.Listener, AppAdapter.Listener {
         heroHint.text = if (prefs.isLoggedIn) {
             "OK pour ouvrir"
         } else {
-            "OK pour ouvrir  ·  Ajoute un abonnement Xtream dans Réglages pour voir tes chaînes ici"
+            "OK pour ouvrir  ·  Ajoute des chaînes dans Réglages › Source des chaînes"
         }
         pickColor(key, app.banner ?: app.icon, Ambience.fallback(app.pkg.hashCode()))
         liftRowOf(tile)

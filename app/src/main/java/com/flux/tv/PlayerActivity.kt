@@ -118,17 +118,29 @@ class PlayerActivity : FluxActivity() {
         playCurrent()
     }
 
-    /** Lecteur réglé pour démarrer vite : petit tampon de départ, gros tampon ensuite. */
-    private fun buildPlayer(): ExoPlayer {
+    private val extractors = DefaultExtractorsFactory()
+        .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES)
+
+    /** Accès réseau d'une chaîne : certaines chaînes gratuites exigent un navigateur ou une page d'origine précis. */
+    private fun sourceFactory(ch: Channel?): DefaultMediaSourceFactory {
         val http = DefaultHttpDataSource.Factory()
-            .setUserAgent(USER_AGENT)
+            .setUserAgent(ch?.userAgent?.takeIf { it.isNotBlank() } ?: USER_AGENT)
             .setAllowCrossProtocolRedirects(true)
             .setConnectTimeoutMs(8_000)
             .setReadTimeoutMs(15_000)
+        ch?.referrer?.takeIf { it.isNotBlank() }?.let { ref ->
+            http.setDefaultRequestProperties(mapOf("Referer" to ref, "Origin" to originOf(ref)))
+        }
+        return DefaultMediaSourceFactory(http, extractors)
+    }
 
-        val extractors = DefaultExtractorsFactory()
-            .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES)
+    private fun originOf(url: String): String = runCatching {
+        val u = java.net.URL(url)
+        "${u.protocol}://${u.host}" + if (u.port > 0) ":${u.port}" else ""
+    }.getOrDefault(url)
 
+    /** Lecteur réglé pour démarrer vite : petit tampon de départ, gros tampon ensuite. */
+    private fun buildPlayer(): ExoPlayer {
         val stable = prefs.stableBuffer
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
@@ -151,7 +163,6 @@ class PlayerActivity : FluxActivity() {
 
         return ExoPlayer.Builder(this, renderers)
             .setTrackSelector(trackSelector)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(http, extractors))
             .setLoadControl(loadControl)
             .build()
             .apply {
@@ -163,8 +174,8 @@ class PlayerActivity : FluxActivity() {
                         if (state == Player.STATE_READY) {
                             retries = 0
                             errorView.visibility = View.GONE
-                            // On retient le format qui marche avec ce serveur.
-                            if (currentHls != prefs.useHls) prefs.useHls = currentHls
+                            // On retient le format qui marche avec ce serveur Xtream.
+                            if (prefs.isXtream && currentHls != prefs.useHls) prefs.useHls = currentHls
                         }
                     }
 
@@ -180,17 +191,26 @@ class PlayerActivity : FluxActivity() {
         currentId = playlist[index]
         triedOtherFormat = false
         retries = 0
-        startStream(currentId, prefs.useHls)
+        val ch = Repo.byId[currentId]
+        val hls = if (ch != null && ch.url.isNotBlank()) {
+            ch.url.contains(".m3u8", ignoreCase = true)
+        } else {
+            prefs.useHls
+        }
+        startStream(currentId, hls)
     }
 
+    /** [hls] force la lecture en flux HLS ; sinon le lecteur devine d'après l'adresse. */
     private fun startStream(id: Int, hls: Boolean) {
         currentHls = hls
         errorView.visibility = View.GONE
+        val ch = Repo.byId[id]
+        val url = if (ch != null && ch.url.isNotBlank()) ch.url else api.streamUrl(id, hls)
         val item = MediaItem.Builder()
-            .setUri(api.streamUrl(id, hls))
+            .setUri(url)
             .apply { if (hls) setMimeType(MimeTypes.APPLICATION_M3U8) }
             .build()
-        player.setMediaItem(item)
+        player.setMediaSource(sourceFactory(ch).createMediaSource(item))
         player.prepare()
         player.play()
     }
@@ -202,7 +222,7 @@ class PlayerActivity : FluxActivity() {
             return
         }
         if (!triedOtherFormat) {
-            // Certains serveurs ne servent que le .ts, d'autres que le .m3u8.
+            // Certains serveurs ne servent que le .ts, d'autres que le .m3u8 : on essaie l'autre.
             triedOtherFormat = true
             startStream(currentId, !currentHls)
             return
@@ -249,7 +269,12 @@ class PlayerActivity : FluxActivity() {
         }
 
         val cached = Epg.cached(id)
-        if (cached != null) {
+        if (!prefs.isXtream) {
+            // Les playlists M3U n'ont pas de guide des programmes.
+            nowView.text = ch?.categoryId ?: ""
+            timeline.visibility = View.GONE
+            nextView.visibility = View.GONE
+        } else if (cached != null) {
             renderEpg(cached)
         } else {
             nowView.text = ""

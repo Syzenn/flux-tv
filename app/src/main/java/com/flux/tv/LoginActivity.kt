@@ -38,7 +38,8 @@ class LoginActivity : FluxActivity() {
         later.text = if (fromSettings) "Annuler" else "Plus tard, ouvrir mes applis"
         later.setOnClickListener {
             if (fromSettings) {
-                finish()
+                // Rien derrière nous (on vient de changer de source) : on retourne à l'accueil.
+                if (isTaskRoot) openHome() else finish()
             } else {
                 prefs.skipLogin = true
                 openHome()
@@ -75,6 +76,7 @@ class LoginActivity : FluxActivity() {
                     onSuccess = { ok ->
                         if (ok) {
                             Repo.clear(this@LoginActivity)
+                            prefs.m3uUrl = ""
                             prefs.server = XtreamApi.normalize(s)
                             prefs.username = u
                             prefs.password = p
@@ -88,6 +90,63 @@ class LoginActivity : FluxActivity() {
                     },
                 )
             }
+        }
+
+        /** Teste une playlist M3U, la garde en cache, puis ouvre l'accueil. */
+        fun usePlaylist(url: String) {
+            error.visibility = View.GONE
+            progress.visibility = View.VISIBLE
+            button.isEnabled = false
+            button.text = ""
+            lifecycleScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        Repo.clear(this@LoginActivity)
+                        prefs.logout()
+                        prefs.m3uUrl = url
+                        Repo.download(this@LoginActivity, prefs)
+                    }
+                }
+                progress.visibility = View.GONE
+                button.isEnabled = true
+                button.text = "Se connecter"
+                val data = result.getOrNull()
+                if (data != null && data.channels.isNotEmpty()) {
+                    Repo.set(data)
+                    openHome()
+                } else {
+                    prefs.m3uUrl = ""
+                    showError(
+                        if (data != null) "Cette playlist ne contient aucune chaîne."
+                        else "Impossible de charger la playlist : ${result.exceptionOrNull()?.message ?: "erreur réseau"}"
+                    )
+                }
+            }
+        }
+
+        findViewById<Button>(R.id.free).setOnClickListener { usePlaylist(M3u.FREE_FRANCE) }
+        findViewById<Button>(R.id.m3u).setOnClickListener {
+            val field = EditText(this).apply {
+                hint = "http://…/playlist.m3u"
+                setSingleLine()
+                inputType = android.text.InputType.TYPE_TEXT_VARIATION_URI
+            }
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            val box = android.widget.FrameLayout(this).apply {
+                setPadding(pad, pad / 2, pad, 0)
+                addView(field)
+            }
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Lien de la playlist M3U")
+                .setMessage("Colle ou tape l'adresse donnée par ta box ou ton fournisseur.")
+                .setView(box)
+                .setPositiveButton("Valider") { _, _ ->
+                    val url = field.text.toString().trim()
+                    if (url.startsWith("http://") || url.startsWith("https://")) usePlaylist(url)
+                    else showError("L'adresse doit commencer par http:// ou https://")
+                }
+                .setNegativeButton("Annuler", null)
+                .show()
         }
 
         button.setOnClickListener { submit() }

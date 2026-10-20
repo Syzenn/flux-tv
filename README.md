@@ -4,7 +4,8 @@ Une interface IPTV légère et rapide pour Android TV / Google TV, pensée pour 
 
 ## Ce que fait l'appli
 
-- Connexion Xtream (serveur, identifiant, mot de passe), saisie une seule fois.
+- Trois sources de chaînes : **chaînes gratuites** en un clic (liste publique iptv-org pour la France), **lien M3U** (box internet, tuner TNT réseau, abonnement), ou **codes Xtream**.
+- Rangée **Applis** pour ouvrir toutes les applis du boîtier, même sans abonnement.
 - Interface inspirée d'Apple TV : heure et date en haut, rangées de chaînes, lueur colorée qui prend la couleur du logo sélectionné.
 - Ouverture directe sur tes **favoris**, dans une étagère en verre dépoli.
 - Une rangée par catégorie, qui remonte en haut quand tu la sélectionnes.

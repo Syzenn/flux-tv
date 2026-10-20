@@ -23,6 +23,9 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Tester
+        run: gradle testReleaseUnitTest --no-daemon
+
       - name: Compiler
         run: gradle assembleRelease --no-daemon --stacktrace
 

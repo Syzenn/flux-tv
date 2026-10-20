@@ -78,20 +78,20 @@ class SettingsActivity : FluxActivity() {
             ) { confirmClearFavorites() }
         }
 
-        section("Abonnement IPTV")
+        section("Source des chaînes")
         if (prefs.isLoggedIn) {
             row(
                 R.drawable.ic_power,
-                "Se déconnecter",
-                prefs.server.removePrefix("http://").removePrefix("https://"),
+                "Changer de source",
+                "Actuellement : ${prefs.sourceLabel}",
                 null,
             ) { confirmLogout() }
         } else {
             row(
                 R.drawable.ic_login,
-                "Connecter un abonnement",
-                "Avec tes codes Xtream (serveur, identifiant, mot de passe), tes chaînes et favoris s'affichent sur l'accueil.",
-                "Aucun",
+                "Ajouter des chaînes",
+                "Chaînes gratuites en un clic, lien M3U, ou codes Xtream de ton abonnement.",
+                "Aucune",
             ) {
                 startActivity(
                     Intent(this, LoginActivity::class.java).putExtra(LoginActivity.EXTRA_FROM_SETTINGS, true)
@@ -146,9 +146,8 @@ class SettingsActivity : FluxActivity() {
         refreshing = true
         toast("Mise à jour de la liste…")
         lifecycleScope.launch {
-            val api = prefs.api()
             val result = withContext(Dispatchers.IO) {
-                runCatching { Repo.download(this@SettingsActivity, api) }
+                runCatching { Repo.download(this@SettingsActivity, prefs) }
             }
             refreshing = false
             result.fold(
@@ -178,14 +177,15 @@ class SettingsActivity : FluxActivity() {
 
     private fun confirmLogout() {
         AlertDialog.Builder(this)
-            .setTitle("Se déconnecter ?")
-            .setMessage("Tes favoris sont conservés. L'accueil gardera tes applis.")
-            .setPositiveButton("Se déconnecter") { _, _ ->
+            .setTitle("Changer de source ?")
+            .setMessage("Les chaînes actuelles seront retirées de l'accueil. Tes applis restent là, et tu pourras choisir une autre source.")
+            .setPositiveButton("Changer") { _, _ ->
                 prefs.logout()
                 prefs.skipLogin = true
                 Repo.clear(this)
                 startActivity(
-                    Intent(this, MainActivity::class.java)
+                    Intent(this, LoginActivity::class.java)
+                        .putExtra(LoginActivity.EXTRA_FROM_SETTINGS, true)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 )
                 finish()

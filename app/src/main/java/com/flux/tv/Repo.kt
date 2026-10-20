@@ -23,9 +23,18 @@ object Repo {
 
     private fun catsFile(ctx: Context) = File(ctx.filesDir, "cats.json")
     private fun streamsFile(ctx: Context) = File(ctx.filesDir, "streams.json")
+    private fun playlistFile(ctx: Context) = File(ctx.filesDir, "playlist.m3u")
 
     /** À appeler hors du thread principal. */
-    fun readCache(ctx: Context): Data? {
+    fun readCache(ctx: Context, prefs: Prefs): Data? {
+        if (prefs.isM3u) {
+            return try {
+                val f = playlistFile(ctx)
+                if (!f.exists()) null else M3u.parse(f.readText()).takeIf { it.channels.isNotEmpty() }
+            } catch (e: Exception) {
+                null
+            }
+        }
         return try {
             val c = catsFile(ctx)
             val s = streamsFile(ctx)
@@ -37,8 +46,15 @@ object Repo {
         }
     }
 
-    /** Télécharge tout depuis le serveur. À appeler hors du thread principal. */
-    fun download(ctx: Context, api: XtreamApi): Data {
+    /** Télécharge tout depuis la source configurée. À appeler hors du thread principal. */
+    fun download(ctx: Context, prefs: Prefs): Data {
+        if (prefs.isM3u) {
+            val raw = M3u.download(prefs.m3uUrl)
+            val data = M3u.parse(raw)
+            if (data.channels.isNotEmpty()) playlistFile(ctx).writeText(raw)
+            return data
+        }
+        val api = prefs.api()
         val catsRaw = api.categoriesRaw()
         val streamsRaw = api.streamsRaw()
         val data = Data(XtreamApi.parseCategories(catsRaw), XtreamApi.parseStreams(streamsRaw))
@@ -65,6 +81,7 @@ object Repo {
     fun clear(ctx: Context) {
         catsFile(ctx).delete()
         streamsFile(ctx).delete()
+        playlistFile(ctx).delete()
         set(Data(emptyList(), emptyList()))
         playlist = emptyList()
     }

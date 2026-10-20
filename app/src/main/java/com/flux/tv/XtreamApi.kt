@@ -17,6 +17,10 @@ data class Channel(
     val name: String,
     val icon: String,
     val categoryId: String,
+    /** Adresse directe du flux (playlists M3U). Vide pour Xtream, où on la construit. */
+    val url: String = "",
+    val userAgent: String = "",
+    val referrer: String = "",
 ) {
     /** Nom sans les préfixes du type "FR | " ou "FR: ". */
     val displayName: String by lazy { cleanName(name) }
@@ -26,8 +30,11 @@ data class EpgEntry(val title: String, val start: Long, val end: Long)
 
 private val PREFIX = Regex("^\\s*[|\\[(]?\\s*[A-Z]{2,3}\\s*[\\])]?\\s*[|:]\\s*")
 
+private val QUALITY = Regex("""\s*\((\d{3,4}[pi]|\d+K|SD|HD|FHD|UHD)\)""", RegexOption.IGNORE_CASE)
+private val TAGS = Regex("""\s*\[[^\]]*]""")
+
 fun cleanName(raw: String): String {
-    val cleaned = raw.replace(PREFIX, "").trim()
+    val cleaned = raw.replace(PREFIX, "").replace(QUALITY, "").replace(TAGS, "").trim()
     return cleaned.ifEmpty { raw.trim() }
 }
 
