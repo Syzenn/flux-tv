@@ -27,13 +27,13 @@ class M3uTest {
 
         val info = data.channels[0]
         assertEquals("Info 24", info.displayName)
-        assertEquals("News", info.categoryId)
+        assertEquals("Info", info.categoryId) // traduit en français
         assertEquals("https://example.org/info24.png", info.icon)
         assertEquals("https://example.org/info24/index.m3u8", info.url)
 
         val docs = data.channels[1]
         assertEquals("Docs, Monde", docs.displayName) // virgule dans le nom conservée
-        assertEquals("Documentary", docs.categoryId) // premier groupe seulement
+        assertEquals("Documentaires", docs.categoryId) // premier groupe seulement, traduit
         assertEquals("Mozilla/5.0 Test", docs.userAgent)
         assertEquals("https://docs.example.org/live", docs.referrer)
 
@@ -41,8 +41,8 @@ class M3uTest {
         assertEquals("Sans groupe", plain.displayName)
         assertEquals("Autres chaînes", plain.categoryId)
 
-        // Catégories triées, « Autres chaînes » en dernier.
-        assertEquals(listOf("Documentary", "News", "Autres chaînes"), data.categories.map { it.name })
+        // Catégories principales d'abord, « Autres chaînes » en dernier.
+        assertEquals(listOf("Info", "Documentaires", "Autres chaînes"), data.categories.map { it.name })
     }
 
     /** Vérifie la vraie liste gratuite (s'exécute sur GitHub, qui a accès à internet). */

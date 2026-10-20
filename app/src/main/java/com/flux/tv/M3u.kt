@@ -12,6 +12,34 @@ object M3u {
 
     private val ATTR = Regex("""([\w-]+)="([^"]*)"""")
 
+    private const val OTHERS = "Autres chaînes"
+
+    /** Catégories des listes publiques (en anglais) traduites en français. */
+    private val FRENCH = mapOf(
+        "general" to "Généralistes", "news" to "Info", "sports" to "Sport", "sport" to "Sport",
+        "movies" to "Films", "series" to "Séries", "entertainment" to "Divertissement",
+        "kids" to "Jeunesse", "family" to "Famille", "animation" to "Animation",
+        "documentary" to "Documentaires", "music" to "Musique", "culture" to "Culture",
+        "lifestyle" to "Art de vivre", "cooking" to "Cuisine", "comedy" to "Humour",
+        "business" to "Économie", "legislative" to "Politique", "religious" to "Religion",
+        "relax" to "Détente", "science" to "Sciences", "travel" to "Voyage",
+        "weather" to "Météo", "outdoor" to "Nature", "classic" to "Classiques",
+        "auto" to "Auto", "shop" to "Achats", "education" to "Éducation",
+        "undefined" to OTHERS,
+    )
+
+    /** Les catégories les plus regardées d'abord, comme sur une vraie box. */
+    private val ORDER = listOf(
+        "Généralistes", "Info", "Sport", "Films", "Séries", "Divertissement",
+        "Jeunesse", "Documentaires", "Musique",
+    )
+
+    private fun frenchGroup(raw: String): String {
+        val g = raw.trim()
+        if (g.isEmpty()) return OTHERS
+        return FRENCH[g.lowercase()] ?: g
+    }
+
     fun isFreeFrance(url: String) = url == FREE_FRANCE
 
     /** À appeler hors du thread principal. */
@@ -75,7 +103,7 @@ object M3u {
                     val title = name?.takeIf { it.isNotBlank() } ?: continue
                     val id = line.hashCode()
                     if (seen.add(id)) {
-                        val cat = group.ifBlank { "Autres chaînes" }
+                        val cat = frenchGroup(group)
                         categories.getOrPut(cat) { Category(cat, cat) }
                         channels.add(
                             Channel(
@@ -93,8 +121,14 @@ object M3u {
                 }
             }
         }
-        // Catégories triées par nom, « Autres » à la fin.
-        val sorted = categories.values.sortedWith(compareBy({ it.name == "Autres chaînes" }, { it.name.lowercase() }))
+        // Catégories principales d'abord, puis les autres par nom, « Autres chaînes » à la fin.
+        val sorted = categories.values.sortedWith(
+            compareBy(
+                { it.name == OTHERS },
+                { ORDER.indexOf(it.name).let { i -> if (i < 0) Int.MAX_VALUE else i } },
+                { it.name.lowercase() },
+            )
+        )
         return Repo.Data(sorted, channels)
     }
 }
